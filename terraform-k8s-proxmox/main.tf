@@ -2,7 +2,6 @@ terraform {
   required_providers {
     proxmox = {
       source = "telmate/proxmox"
-      #version = "2.9.14"
       version = "3.0.1-rc1"
     }
   }
@@ -29,6 +28,7 @@ resource "proxmox_vm_qemu" "k8s_masters" {
   
   for_each = var.k8s_masters #using variables in terraform.tfvars
   name = each.value.name 
+  qemu_os = "other"
   desc = each.value.notes
   target_node = each.value.target_node
   os_type = "cloud-init"
@@ -43,7 +43,7 @@ resource "proxmox_vm_qemu" "k8s_masters" {
   cloudinit_cdrom_storage = "local-lvm"
   # basic VM settings here. agent refers to guest agent
   agent = 1
-  bootdisk = "scsi0"
+  
 
  #######Working on 3.0.1-rc1
   #configuring disk settings
@@ -59,14 +59,7 @@ resource "proxmox_vm_qemu" "k8s_masters" {
   }
   
   
-  ########deprecated on 3.0.1
-  #disk {
-  #  slot = 0
-  #  size = each.value.disk_size
-  #  type = "scsi"
-  #  storage = "local-lvm"
-  #}
-  
+    
   # if you want two NICs, just copy this whole network section and duplicate it
   network {
     model = "virtio"
@@ -128,6 +121,7 @@ resource "proxmox_vm_qemu" "k8s_workers" {
  
   for_each = var.k8s_workers #using variables in terraform.tfvars
   name = each.value.name 
+  qemu_os = "other"
   desc = each.value.notes
   target_node = each.value.target_node
   os_type = "cloud-init"
@@ -142,7 +136,7 @@ resource "proxmox_vm_qemu" "k8s_workers" {
   cloudinit_cdrom_storage = "local-lvm"
   # basic VM settings here. agent refers to guest agent
   agent = 1
-  bootdisk = "scsi0"
+  
 
 
  #######Working on 3.0.1-rc1
@@ -159,14 +153,6 @@ resource "proxmox_vm_qemu" "k8s_workers" {
   }
 
   
-  ########deprecated on 3.0.1
-  #disk {
-  #  slot = 0
-  #  size = each.value.disk_size
-  #  type = "scsi"
-  #  storage = "local-lvm"
-  #}
-
   # if you want two NICs, just copy this whole network section and duplicate it
   network {
     model = "virtio"
