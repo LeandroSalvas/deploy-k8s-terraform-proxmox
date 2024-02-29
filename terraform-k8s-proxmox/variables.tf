@@ -7,12 +7,12 @@ variable "template_name" {
 }
 
 variable "pmox_user" {
-    #default = "terraform-prov@pve"
-    default = "root@pam"
+    default = "terraform-prov@pve"
+    #default = "root@pam"
 }
 
 variable "pmox_password" {
-    default = "Icore2w7"
+    default = "password"
 }
 variable "pmox_api_url" {
     default = "https://192.168.15.52:8006/api2/json"
