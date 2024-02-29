@@ -1,0 +1,5 @@
+notas
+*.hck
+*.lock
+*.tfstate
+/terraform-k8s-proxmox/.terraform/
