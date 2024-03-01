@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 #wait for cloud-init tasks finish to start install k8s prerequisites
-while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo 'Waiting for cloud-init...'; sleep 1; done
+while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo 'Waiting for cloud-init...'; sleep 5; done
 
 # Common setup for all servers (Control Plane and Nodes)
 set -euxo pipefail
