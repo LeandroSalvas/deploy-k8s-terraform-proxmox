@@ -15,7 +15,7 @@ variable "pmox_password" {
     default = "password"
 }
 variable "pmox_api_url" {
-    default = "https://192.168.15.52:8006/api2/json"
+    default = "https://192.168.15.51:8006/api2/json"
 }
 
 variable "k8s_masters" {
