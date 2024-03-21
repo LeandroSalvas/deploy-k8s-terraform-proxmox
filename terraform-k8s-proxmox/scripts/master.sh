@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # Setup for Control Plane (Master) server
+echo  "Setup for Control Plane (Master) server"
 
 set -euxo pipefail
 
@@ -19,6 +20,7 @@ sudo cp -i /etc/kubernetes/admin.conf "$HOME"/.kube/config
 sudo chown "$(id -u)":"$(id -g)" "$HOME"/.kube/config
 
 # Save Configs on directory to share to another hosts access files to join cluster!
+echo "Save Configs on directory to share to another hosts access files to join cluster!"
 config_path="/terraform/configs"
 
 if [ -d $config_path ]; then
@@ -35,6 +37,7 @@ sudo chmod +x /terraform/configs/join.sh
 sudo kubeadm token create --print-join-command > /terraform/configs/join.sh
 
 # Install Calico Network Plugin
+echo "Install Calico Network Plugin"
 
 #curl https://docs.projectcalico.org/manifests/calico.yaml -O
 curl https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/calico.yaml -O
@@ -42,15 +45,18 @@ curl https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/ca
 kubectl apply -f calico.yaml
 
 # Install Metrics Server
+echo "Install Metrics Server"
 
 kubectl apply -f https://raw.githubusercontent.com/scriptcamp/kubeadm-scripts/main/manifests/metrics-server.yaml
 
 # Install Kubernetes Dashboard
+echo "Install Kubernetes Dashboard"
 
 #kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.1/aio/deploy/recommended.yaml
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
 
 # Create Dashboard User
+echo "Create Dashboard User"
 
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
