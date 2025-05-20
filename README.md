@@ -15,10 +15,10 @@
 
 ####  Reproduce this steps on PMOX Server
 
-#### Step 1. Download Cloudinit image from Ubuntu 23.04
+#### Step 1. Download Cloudinit image from Ubuntu 24.10
 
 ```
-wget https://cloud-images.ubuntu.com/lunar/current/lunar-server-cloudimg-amd64.img
+wget https://cloud-images.ubuntu.com/oracular/current/oracular-server-cloudimg-amd64.img
 ``` 
 
 #### Step 2. install libguestfs-tools on PMOX Server
@@ -26,15 +26,15 @@ wget https://cloud-images.ubuntu.com/lunar/current/lunar-server-cloudimg-amd64.i
 apt update -y && apt install libguestfs-tools -y
 ```
 
-#### Step 3. Installing packages on cloudinit Ubuntu image
+#### Step 3. Installing packages and updating cloudinit Ubuntu image
 ```
-virt-customize -a lunar-server-cloudimg-amd64.img --install qemu-guest-agent
+virt-customize -a oracular-server-cloudimg-amd64.img --install qemu-guest-agent
+virt-customize -a oracular-server-cloudimg-amd64.img --run-command "apt update -y && apt upgrade -y"
 ```
 
 #### Step 4. Create a VM Template based on cloudinit ubuntu image
 ```
-virt-customize -a /root/images/lunar-server-cloudimg-amd64.img --install qemu-guest-agent
-qm create 9000 --name "ubuntu2304-template" --memory 2048 --cores 1 --net0 virtio,bridge=vmbr0
+qm create 9000 --name "ubuntu2410-template" --memory 2048 --cores 1 --net0 virtio,bridge=vmbr0
 qm set 9000 --scsi0 local-lvm:0,import-from=/root/images/lunar-server-cloudimg-amd64.img
 qm set 9000 --ide3 local-lvm:cloudinit
 qm set 9000 --boot order=scsi0
@@ -100,7 +100,7 @@ cd $HOME/.kube/
 
 The config file is hosted by master node
 ```
-wget http://192.168.15.221:8000/config -o config
+wget http://192.168.15.221:8000/config
 ```
 
 Now you'll be able to use kubectl to manage your cluster.
@@ -139,7 +139,7 @@ Now you Metallb loadBlancing is done move on next step
 
 #### Step 12. Deploy a test app on Kubernets: 
 
-On cloned repo directory go to app directory and run this command:
+On cloned repo directory go to app_mario directory and run this command:
 ```
 kubectl apply -f app.yml
 ```
