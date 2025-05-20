@@ -35,7 +35,7 @@ virt-customize -a oracular-server-cloudimg-amd64.img --run-command "apt update -
 #### Step 4. Create a VM Template based on cloudinit ubuntu image
 ```
 qm create 9000 --name "ubuntu2410-template" --memory 2048 --cores 1 --net0 virtio,bridge=vmbr0
-qm set 9000 --scsi0 local-lvm:0,import-from=/root/images/lunar-server-cloudimg-amd64.img
+qm set 9000 --scsi0 local-lvm:0,import-from=/root/images/oracular-server-cloudimg-amd64.img
 qm set 9000 --ide3 local-lvm:cloudinit
 qm set 9000 --boot order=scsi0
 qm set 9000 --serial0 socket --vga serial0
