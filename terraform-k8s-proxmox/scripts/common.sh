@@ -8,7 +8,7 @@ set -euxo pipefail
 
 # Variable Declaration
 
-KUBERNETES_VERSION="v1.28"
+KUBERNETES_VERSION="v1.31"
 DEBIAN_FRONTEND=noninteractive
 
 # disable swap
@@ -26,9 +26,11 @@ sudo apt-get update -y
 
 # Install CRI-O Runtime
 
-OS="xUbuntu_20.04"
+#OS="xUbuntu_20.04"
+OS="xUbuntu_22.04"
 
 VERSION="1.28"
+
 
 # Create the .conf file to load the modules at bootup
 cat <<EOF | sudo tee /etc/modules-load.d/crio.conf
@@ -68,6 +70,16 @@ echo "CRI runtime installed susccessfully"
 
 sudo apt-get update
 sudo apt-get install -y apt-transport-https ca-certificates curl
+
+
+
+curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+sudo apt-get install apt-transport-https --yes
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+sudo apt-get update
+sudo apt-get install helm
+
+
 
 #curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-archive-keyring.gpg
 echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list

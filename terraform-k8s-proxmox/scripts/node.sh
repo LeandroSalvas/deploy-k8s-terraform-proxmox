@@ -6,6 +6,10 @@ set -euxo pipefail
 
 MASTER_IP="192.168.15.221"
 
+#install nfs-common
+sudo apt-get install nfs-common -y
+
+
 mkdir -p /terraform/configs/
 sudo wget http://$MASTER_IP:8000/join.sh -P /terraform/configs/
 sudo wget http://$MASTER_IP:8000/config -P /terraform/configs/

@@ -39,7 +39,6 @@ sudo kubeadm token create --print-join-command > /terraform/configs/join.sh
 # Install Calico Network Plugin
 echo "Install Calico Network Plugin"
 
-#curl https://docs.projectcalico.org/manifests/calico.yaml -O
 curl https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/calico.yaml -O
 
 kubectl apply -f calico.yaml
@@ -52,11 +51,22 @@ kubectl apply -f https://raw.githubusercontent.com/scriptcamp/kubeadm-scripts/ma
 # Install Kubernetes Dashboard
 echo "Install Kubernetes Dashboard"
 
-#kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.1/aio/deploy/recommended.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.6.1/aio/deploy/recommended.yaml
+# Add kubernetes-dashboard repository
+helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+# Deploy a Helm Release named "kubernetes-dashboard" using the kubernetes-dashboard chart
+helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --create-namespace --namespace kubernetes-dashboard
+
 
 # Create Dashboard User
 echo "Create Dashboard User"
+
+#cat <<EOF | kubectl apply -f -
+#apiVersion: v1
+#kind: ServiceAccount
+#metadata:
+#  name: admin-user
+#  namespace: kubernetes-dashboard
+#EOF
 
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -65,6 +75,7 @@ metadata:
   name: admin-user
   namespace: kubernetes-dashboard
 EOF
+
 
 cat <<EOF | kubectl apply -f -
 apiVersion: rbac.authorization.k8s.io/v1
@@ -81,8 +92,21 @@ subjects:
   namespace: kubernetes-dashboard
 EOF
 
-#kubectl -n kubernetes-dashboard get secret "$(kubectl -n kubernetes-dashboard get sa/admin-user -o jsonpath="{.secrets[0].name}")" -o go-template="{{.data.token | base64decode}}" >> /terraform/configs/token
-kubectl -n kubernetes-dashboard create token admin-user >> /terraform/configs/token
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard
+  annotations:
+    kubernetes.io/service-account.name: "admin-user"
+type: kubernetes.io/service-account-token
+EOF
+
+
+#kubectl -n kubernetes-dashboard create token admin-user >> /terraform/configs/token
+kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d >> /terraform/configs/token
 
 
 sudo -i -u ubuntu bash << EOF
@@ -92,5 +116,6 @@ sudo cp -i /terraform/configs/config /home/ubuntu/.kube/
 sudo chown 1000:1000 /home/ubuntu/.kube/config
 EOF
 
-
+#restart coredns for dashboard works correctly
+kubectl rollout restart deployment -n kube-system coredns
 echo "finished the MASTER configuration"
