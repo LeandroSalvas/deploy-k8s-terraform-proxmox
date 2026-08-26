@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning 2.0.0](https://semver.org/).
 
+## [1.0.1] - 2026-08-26
+
+### Fixed
+
+- Worker nodes now receive `node-role.kubernetes.io/worker` label after `kubeadm join`
+
 ## [1.0.0] - 2026-08-26
 
 ### Added
@@ -64,6 +70,7 @@ Versioning follows [Semantic Versioning 2.0.0](https://semver.org/).
 - kubeadm cluster bootstrap scripts
 - Basic README and `.gitignore`
 
+[1.0.1]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v0.3.0...v1.0.0
 [0.3.0]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v0.1.0...v0.2.0
