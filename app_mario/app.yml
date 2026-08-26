@@ -3,32 +3,42 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: supermario
+  labels:
+    app: supermario
 spec:
+  replicas: 4
   selector:
     matchLabels:
       app: supermario
-  replicas: 4 
   template:
     metadata:
       labels:
         app: supermario
     spec:
       containers:
-      - name: supermario
-        image: bharathshetty4/supermario
-        ports:
-        - containerPort: 8080
+        - name: supermario
+          image: bharathshetty4/supermario:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: supermario-loadbalancer-service
+  name: supermario
   labels:
-    LB: supermario
+    app: supermario
 spec:
+  type: LoadBalancer
   selector:
     app: supermario
-  type: LoadBalancer
   ports:
     - protocol: TCP
       port: 80

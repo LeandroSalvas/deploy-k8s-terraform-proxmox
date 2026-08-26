@@ -1,6 +1,41 @@
-notas
-.un~
-*.hck
-*.lock
+# Terraform
 *.tfstate
-/terraform-k8s-proxmox/.terraform/
+*.tfstate.*
+*.tfstate.backup
+.terraform/
+# .terraform.lock.hcl should be committed for provider version pinning
+crash.log
+crash.*.log
+*.tfvars
+!*.tfvars.example
+*.tfplan
+*.tfplan.*
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# SSH Keys
+ssh-keys/*.pem
+ssh-keys/id_rsa*
+ssh-keys/id_ed25519*
+ssh-keys/*.key
+ssh-keys/*.pub
+
+# Sensitive files
+*.secret
+*.credentials
+*.env
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml

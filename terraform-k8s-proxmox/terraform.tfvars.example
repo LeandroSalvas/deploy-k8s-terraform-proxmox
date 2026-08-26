@@ -1,0 +1,85 @@
+# =============================================================================
+# EXAMPLE - Copy to terraform.tfvars and fill in your values
+# NEVER commit terraform.tfvars to version control
+# =============================================================================
+
+# --- Proxmox Connection ---
+pmox_api_url  = "https://YOUR_PROXMOX_HOST:8006/api2/json"
+pmox_user     = "terraform-prov@pve"
+# pmox_password = set via TF_VAR_pmox_password environment variable
+
+# --- SSH ---
+# ssh_public_key = set via TF_VAR_ssh_public_key environment variable or file()
+ssh_private_key_path = "~/.ssh/id_rsa"
+
+# --- VM Template ---
+template_name = "ubuntu2404-template"
+
+# --- Cluster Topology ---
+k8s_version = "v1.31"
+
+# --- Control Plane Nodes (min 1, odd number recommended for HA) ---
+k8s_masters = {
+  m1 = {
+    target_node = "pve"
+    vcpu        = 2
+    memory      = 4096
+    disk_size   = 30
+    name        = "k8sm1"
+    notes       = "Kubernetes Control Plane 1"
+    ip          = "192.168.15.221"
+    gw          = "192.168.15.1"
+  }
+  # Uncomment for HA (3 masters):
+  # m2 = {
+  #   target_node = "pve"
+  #   vcpu        = 2
+  #   memory      = 4096
+  #   disk_size   = 30
+  #   name        = "k8sm2"
+  #   notes       = "Kubernetes Control Plane 2"
+  #   ip          = "192.168.15.222"
+  #   gw          = "192.168.15.1"
+  # }
+  # m3 = {
+  #   target_node = "pve"
+  #   vcpu        = 2
+  #   memory      = 4096
+  #   disk_size   = 30
+  #   name        = "k8sm3"
+  #   notes       = "Kubernetes Control Plane 3"
+  #   ip          = "192.168.15.223"
+  #   gw          = "192.168.15.1"
+  # }
+}
+
+# --- Worker Nodes (min 1) ---
+k8s_workers = {
+  w1 = {
+    target_node = "pve"
+    vcpu        = 4
+    memory      = 4096
+    disk_size   = 30
+    name        = "k8sw1"
+    notes       = "Kubernetes Worker 1"
+    ip          = "192.168.15.231"
+    gw          = "192.168.15.1"
+  }
+  w2 = {
+    target_node = "pve"
+    vcpu        = 4
+    memory      = 4096
+    disk_size   = 30
+    name        = "k8sw2"
+    notes       = "Kubernetes Worker 2"
+    ip          = "192.168.15.232"
+    gw          = "192.168.15.1"
+  }
+}
+
+# --- Network ---
+vip_address = "192.168.15.240"
+pod_cidr    = "10.244.0.0/16"
+
+# --- MetalLB ---
+metallb_ip_pool = "192.168.15.250-192.168.15.254"

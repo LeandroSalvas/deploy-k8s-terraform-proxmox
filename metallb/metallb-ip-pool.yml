@@ -1,9 +1,9 @@
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
-  name: first-pool
+  name: default-pool
   namespace: metallb-system
 spec:
   addresses:
-#here give your own IP range
-  - 192.168.15.240-192.168.15.250
+    # Adjust this range to match your network
+    - 192.168.15.250-192.168.15.254
