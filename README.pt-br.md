@@ -411,6 +411,41 @@ Apos o deploy, execute o script de validacao:
 
 Verifica: nodes Ready, pods do control-plane, Calico, MetalLB, Metrics Server e resolucao DNS.
 
+## Aplicacao Demo (Super Mario)
+
+Aplicacao demo com LoadBalancer incluida em `app_mario/app.yml` para testar o MetalLB.
+Faz deploy de 4 replicas com um Service do tipo `LoadBalancer`.
+
+### Deploy
+
+```bash
+kubectl apply -f app_mario/app.yml
+```
+
+### Verificar
+
+```bash
+# Verificar pods
+kubectl get pods -l app=supermario
+
+# Verificar service (aguarde o EXTERNAL-IP do pool do MetalLB)
+kubectl get svc supermario
+```
+
+### Acessar
+
+```bash
+# Substitua pelo EXTERNAL-IP do kubectl get svc
+curl http://<ip-metallb>
+# Ou abra http://<ip-metallb> no navegador
+```
+
+### Remover
+
+```bash
+kubectl delete -f app_mario/app.yml
+```
+
 ## Limpeza
 
 ```bash
