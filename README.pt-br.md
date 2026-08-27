@@ -326,9 +326,6 @@ deploy-k8s-terraform-proxmox/
 ├── .gitignore                         # Regras de ignoracao do Git
 ├── app_mario/
 │   └── app.yml                        # Aplicacao demo (Super Mario)
-├── metallb/
-│   ├── metallb-ip-pool.yml            # Manifest IPAddressPool do MetalLB
-│   └── metallb-pool-advertise.yml     # Manifest L2Advertisement do MetalLB
 ├── scripts/
 │   └── validate-cluster.sh            # Validacao do cluster pos-deploy
 └── terraform-k8s-proxmox/
@@ -343,14 +340,11 @@ deploy-k8s-terraform-proxmox/
     │       ├── variables.tf           # Entradas do modulo
     │       └── outputs.tf             # Saidas do modulo
     ├── templates/
-    │   ├── scripts/
-    │   │   ├── common.sh              # Instalacao CRI-O + kubeadm + Helm
-    │   │   ├── master-init.sh         # kubeadm init + todos os add-ons
-    │   │   ├── master-join.sh         # Join de control planes adicionais
-    │   │   └── worker-join.sh         # Join de nos worker
-    │   └── cloud-init/
-    │       ├── master-init.yaml.tpl   # Template cloud-init do master
-    │       └── worker-init.yaml.tpl   # Template cloud-init do worker
+    │   └── scripts/
+    │       ├── common.sh              # Instalacao CRI-O + kubeadm + Helm
+    │       ├── master-init.sh         # kubeadm init + todos os add-ons
+    │       ├── master-join.sh         # Join de control planes adicionais
+    │       └── worker-join.sh         # Join de nos worker
     ├── scripts/
     │   └── configure-cloudinit.sh     # Configuracao da API cloud-init
     ├── manifests/

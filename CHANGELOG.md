@@ -23,8 +23,6 @@ Versioning follows [Semantic Versioning 2.0.0](https://semver.org/).
 
 - Worker nodes now wait for ALL control plane nodes (first + additional) to complete before starting, preventing resource contention during cluster initialization
 
-## [1.0.4] - 2026-08-26
-
 ### Changed
 
 - Example topology now includes 3 control plane nodes (m1/m2/m3) + 2 workers (w1/w2)
