@@ -8,6 +8,10 @@ terraform {
       source  = "bpg/proxmox"
       version = ">= 0.68.0"
     }
+    null = {
+      source = "hashicorp/null"
+      version = "~> 3.2.0"
+    }
   }
 }
 
@@ -31,7 +35,7 @@ resource "proxmox_virtual_environment_vm" "k8s_master_first" {
   name      = var.control_plane_nodes[local.first_master_key].name
   node_name = var.control_plane_nodes[local.first_master_key].target_node
 
-  started = false
+  started = true
 
   clone {
     vm_id     = 9000
@@ -48,6 +52,7 @@ resource "proxmox_virtual_environment_vm" "k8s_master_first" {
 
   memory {
     dedicated = var.control_plane_nodes[local.first_master_key].memory
+    floating  = var.control_plane_nodes[local.first_master_key].memory
   }
 
   agent {
@@ -135,7 +140,7 @@ resource "proxmox_virtual_environment_vm" "k8s_master_additional" {
 
   depends_on = [proxmox_virtual_environment_vm.k8s_master_first]
 
-  started = false
+  started = true
 
   clone {
     vm_id     = 9000
@@ -152,6 +157,7 @@ resource "proxmox_virtual_environment_vm" "k8s_master_additional" {
 
   memory {
     dedicated = each.value.memory
+    floating  = each.value.memory
   }
 
   agent {
@@ -210,7 +216,7 @@ resource "proxmox_virtual_environment_vm" "k8s_master_additional" {
 
   # Step 4: Fetch control-plane join command from first master
   provisioner "local-exec" {
-    command = "scp -i ${var.node_config.ssh_private_key_path} -o StrictHostKeyChecking=no root@${local.first_master_ip}:/tmp/control-plane-join-command.txt /tmp/control-plane-join-command-${each.key}.txt 2>/dev/null || scp -i ${var.node_config.ssh_private_key_path} -o StrictHostKeyChecking=no ubuntu@${local.first_master_ip}:/tmp/control-plane-join-command.txt /tmp/control-plane-join-command-${each.key}.txt"
+    command = "scp -i ${var.node_config.ssh_private_key_path} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${local.first_master_ip}:/tmp/control-plane-join-command.txt /tmp/control-plane-join-command-${each.key}.txt 2>/dev/null || scp -i ${var.node_config.ssh_private_key_path} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${local.first_master_ip}:/tmp/control-plane-join-command.txt /tmp/control-plane-join-command-${each.key}.txt"
   }
 
   provisioner "file" {
@@ -241,7 +247,7 @@ resource "proxmox_virtual_environment_vm" "k8s_worker" {
   name      = each.value.name
   node_name = each.value.target_node
 
-  started = false
+  started = true
 
   clone {
     vm_id     = 9000
@@ -258,6 +264,7 @@ resource "proxmox_virtual_environment_vm" "k8s_worker" {
 
   memory {
     dedicated = each.value.memory
+    floating  = each.value.memory
   }
 
   agent {
@@ -271,7 +278,10 @@ resource "proxmox_virtual_environment_vm" "k8s_worker" {
 
   description = each.value.notes
 
-  depends_on = [proxmox_virtual_environment_vm.k8s_master_first]
+  depends_on = [
+    proxmox_virtual_environment_vm.k8s_master_first,
+    proxmox_virtual_environment_vm.k8s_master_additional,
+  ]
 
   connection {
     host        = each.value.ip
@@ -315,7 +325,7 @@ resource "proxmox_virtual_environment_vm" "k8s_worker" {
 
   # Fetch join command from first master to local, then upload to worker
   provisioner "local-exec" {
-    command = "scp -i ${var.node_config.ssh_private_key_path} -o StrictHostKeyChecking=no root@${local.first_master_ip}:/tmp/worker-join-command.txt /tmp/worker-join-command-${each.key}.txt 2>/dev/null || scp -i ${var.node_config.ssh_private_key_path} -o StrictHostKeyChecking=no ubuntu@${local.first_master_ip}:/tmp/worker-join-command.txt /tmp/worker-join-command-${each.key}.txt"
+    command = "scp -i ${var.node_config.ssh_private_key_path} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@${local.first_master_ip}:/tmp/worker-join-command.txt /tmp/worker-join-command-${each.key}.txt 2>/dev/null || scp -i ${var.node_config.ssh_private_key_path} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${local.first_master_ip}:/tmp/worker-join-command.txt /tmp/worker-join-command-${each.key}.txt"
   }
 
   provisioner "file" {
@@ -330,5 +340,40 @@ resource "proxmox_virtual_environment_vm" "k8s_worker" {
 
   provisioner "remote-exec" {
     inline = ["sudo bash /tmp/k8s-join.sh"]
+  }
+}
+
+# =============================================================================
+# Label worker nodes with the worker role AFTER they have joined.
+#
+# node-role.kubernetes.io/* labels cannot be applied by the workers themselves:
+# the kubelet rejects them in --node-labels (validation) and the kubelet
+# certificate lacks permission to patch node labels (NodeRestriction -> 403).
+# The documented approach is to apply them via the Kubernetes API using a
+# cluster-admin credential. We do that from the first master (m1), which
+# holds /etc/kubernetes/admin.conf, once each worker is detected in the cluster.
+# A null_resource is used on purpose: it does not modify any VM resource, so it
+# never stops/rebuilds nodes.
+# =============================================================================
+resource "null_resource" "label_workers" {
+  depends_on = [
+    proxmox_virtual_environment_vm.k8s_master_first,
+    proxmox_virtual_environment_vm.k8s_master_additional,
+    proxmox_virtual_environment_vm.k8s_worker,
+  ]
+
+  connection {
+    host        = local.first_master_ip
+    user        = var.node_config.ssh_user
+    private_key = file(var.node_config.ssh_private_key_path)
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/../../templates/scripts/label-workers.sh"
+    destination = "/tmp/label-workers.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = ["sudo bash /tmp/label-workers.sh"]
   }
 }

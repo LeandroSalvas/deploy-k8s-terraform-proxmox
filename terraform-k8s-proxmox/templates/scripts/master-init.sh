@@ -385,10 +385,14 @@ echo "==> Dashboard token saved to /tmp/dashboard-token.txt"
 echo "==> Generating join commands..."
 kubeadm token create --print-join-command > /tmp/worker-join-command.txt
 
-CERT_KEY=$(kubeadm init phase upload-certs 2>/dev/null | grep -E "^[0-9a-f]{64}$" || true)
-if [ -n "$CERT_KEY" ]; then
-  kubeadm token create --certificate-key "$CERT_KEY" --print-join-command > /tmp/control-plane-join-command.txt
-fi
+# Generate a fresh certificate key and upload certs so additional control plane
+# nodes can join with --control-plane. "kubeadm init phase upload-certs" alone
+# does NOT produce the key (it exits with "Skipping phase"); we must generate
+# one explicitly with "kubeadm certs certificate-key" and then upload it.
+CERT_KEY=$(kubeadm certs certificate-key)
+echo "==> Uploading control plane certificates with key $${CERT_KEY:0:8}..."
+kubeadm init phase upload-certs --upload-certs --certificate-key "$CERT_KEY" 2>&1 | tail -2
+kubeadm token create --certificate-key "$CERT_KEY" --print-join-command > /tmp/control-plane-join-command.txt
 
 # Copy kubeconfig for retrieval
 cp /etc/kubernetes/admin.conf /tmp/kubeconfig

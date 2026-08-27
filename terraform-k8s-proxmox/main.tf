@@ -35,19 +35,19 @@ module "k8s_cluster" {
 
   # Connection
   node_config = {
-    target_node         = try(values(var.k8s_masters)[0].target_node, "pve")
-    template_name       = var.template_name
-    storage             = "local-lvm"
-    cpu_type            = "host"
-    bridge              = "vmbr0"
-    ssh_user            = "ubuntu"
+    target_node          = try(values(var.k8s_masters)[0].target_node, "pve")
+    template_name        = var.template_name
+    storage              = "local-lvm"
+    cpu_type             = "host"
+    bridge               = "vmbr0"
+    ssh_user             = "ubuntu"
     ssh_private_key_path = var.ssh_private_key_path
   }
 
   # Cluster
-  k8s_version      = var.k8s_version
+  k8s_version         = var.k8s_version
   control_plane_nodes = var.k8s_masters
-  worker_nodes     = var.k8s_workers
+  worker_nodes        = var.k8s_workers
 
   # Network
   vip_address  = var.vip_address

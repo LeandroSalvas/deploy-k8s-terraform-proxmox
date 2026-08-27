@@ -8,11 +8,28 @@ set -euo pipefail
 
 echo "==> [Common] Starting bootstrap for Kubernetes ${k8s_version}"
 
-# Wait for cloud-init
+# Wait for cloud-init to fully finish (boot-finished is written before the
+# final/fullcloud-init stages have run, so also wait for the process to exit
+# to avoid clashing with cloud-init's own apt operations).
 while [ ! -f /var/lib/cloud/instance/boot-finished ]; do
-  echo "Waiting for cloud-init..."
+  echo "Waiting for cloud-init (boot-finished)..."
   sleep 5
 done
+
+while pgrep -f "cloud-init" >/dev/null 2>&1; do
+  echo "Waiting for cloud-init to fully finish..."
+  sleep 5
+done
+
+# Wrap apt so it waits up to 10 minutes for any in-flight apt/dpkg lock
+# (e.g. cloud-init's own package operations) instead of failing immediately.
+APTOPTS="-o DPkg::Lock::Timeout=600 -o Acquire::Lock::Timeout=600"
+apt_get_update() {
+  DEBIAN_FRONTEND=noninteractive apt-get $APTOPTS update -y
+}
+apt_get_install() {
+  DEBIAN_FRONTEND=noninteractive apt-get $APTOPTS install -y "$@"
+}
 
 # Kernel modules
 echo "==> Configuring kernel modules..."
@@ -40,9 +57,8 @@ sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
 # Install required packages
 echo "==> Installing base packages..."
-export DEBIAN_FRONTEND=noninteractive
-apt-get update -y
-apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release jq nfs-common net-tools conntrack
+apt_get_update
+apt_get_install apt-transport-https ca-certificates curl gnupg lsb-release jq nfs-common net-tools conntrack
 
 # Install CRI-O
 echo "==> Installing CRI-O..."
@@ -54,8 +70,8 @@ curl -fsSL "https://download.opensuse.org/repositories/isv:/cri-o:/stable:/${k8s
 echo "deb [signed-by=/etc/apt/keyrings/cri-o.gpg] https://download.opensuse.org/repositories/isv:/cri-o:/stable:/${k8s_version}/deb/ /" \
   > /etc/apt/sources.list.d/cri-o.list
 
-apt-get update
-apt-get install -y cri-o
+apt_get_update
+apt_get_install cri-o
 systemctl daemon-reload
 systemctl enable crio --now
 
@@ -73,8 +89,8 @@ curl -fsSL "https://pkgs.k8s.io/core:/stable:/${k8s_version}/deb/Release.key" \
 echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/${k8s_version}/deb/ /" \
   > /etc/apt/sources.list.d/kubernetes.list
 
-apt-get update
-apt-get install -y kubelet kubeadm kubectl
+apt_get_update
+apt_get_install kubelet kubeadm kubectl
 apt-mark hold kubelet kubeadm kubectl
 
 # Install Helm

@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning 2.0.0](https://semver.org/).
 
+## [1.0.5] - 2026-08-27
+
+### Fixed
+
+- Worker nodes now receive the `node-role.kubernetes.io/worker` role label correctly (previously they were left with `ROLES <none>`).
+- Root cause: a worker node cannot assign role labels (`node-role.kubernetes.io/*`) to itself. The kubelet rejects them via `--node-labels` (flag validation) and the kubelet certificate lacks permission to patch node labels (the `NodeRestriction` admission controller returns `Forbidden`). The documented approach — Kubernetes API with a cluster-admin credential — is now used.
+- Added a `null_resource` (`label_workers`) that runs on the first master (m1, which holds `/etc/kubernetes/admin.conf`), waits for each ready worker node that lacks the control-plane role to appear, and applies `kubectl label node <worker> node-role.kubernetes.io/worker=`.
+- The `label_workers` step uses a `null_resource` on purpose so it never modifies any VM resource, therefore it cannot stop, rebuild, or interfere with existing nodes.
+- `worker-join.sh` no longer attempts any labeling (removed the invalid `--node-labels` and the `kubelet.conf` "Forbidden" path); it only joins the cluster normally.
+- The `label_workers` script selects worker candidates with the negative label selector `-l '!node-role.kubernetes.io/control-plane'`. This avoids a fragile JSONPath escape of the dotted label key that made the previous filter always return empty, which relabeled every master as a worker. Idempotent: only nodes lacking the control-plane role are touched.
+- Fixed a destructive state drift: `started = false` in the VM resources (used to ensure the cluster boots only after cloud-init sets the static IP) conflicted with the VMs actually running (started by `configure-cloudinit.sh`). Any subsequent `terraform apply` therefore planned `started: true -> false` and shut the nodes down. The resources now declare `started = true`; `configure-cloudinit.sh` is already idempotent (it reboots a running VM to apply cloud-init), so this removes the drift for good.
+
+
+## [1.0.4] - 2026-08-26
+
+### Fixed
+
+- Worker nodes now wait for ALL control plane nodes (first + additional) to complete before starting, preventing resource contention during cluster initialization
+
+## [1.0.4] - 2026-08-26
+
+### Changed
+
+- Example topology now includes 3 control plane nodes (m1/m2/m3) + 2 workers (w1/w2)
+- Control plane memory reduced to 4096 MB (appropriate for control plane role)
+- Enabled memory ballooning (`floating = memory`) on all VMs to return unused guest RAM to the Proxmox host, reducing memory overcommit
+
 ## [1.0.3] - 2026-08-26
 
 ### Fixed
@@ -85,6 +112,8 @@ Versioning follows [Semantic Versioning 2.0.0](https://semver.org/).
 - kubeadm cluster bootstrap scripts
 - Basic README and `.gitignore`
 
+[1.0.5]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v1.0.4...v1.0.5
+[1.0.4]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v1.0.0...v1.0.1

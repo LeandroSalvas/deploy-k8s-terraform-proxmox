@@ -19,6 +19,9 @@ template_name = "ubuntu2404-template"
 k8s_version = "v1.31"
 
 # --- Control Plane Nodes (min 1, odd number recommended for HA) ---
+# m1 sobe primeiro (kubeadm init), m2/m3 depois (kubeadm join, sequencial)
+# Ballooning (floating) e habilitado automaticamente: a RAM nao usada pelo
+# guest e devolvida ao host Proxmox, reduzindo overcommit de memoria.
 k8s_masters = {
   m1 = {
     target_node = "pve"
@@ -30,49 +33,49 @@ k8s_masters = {
     ip          = "192.168.15.221"
     gw          = "192.168.15.1"
   }
-  # Uncomment for HA (3 masters):
-  # m2 = {
-  #   target_node = "pve"
-  #   vcpu        = 2
-  #   memory      = 4096
-  #   disk_size   = 30
-  #   name        = "k8sm2"
-  #   notes       = "Kubernetes Control Plane 2"
-  #   ip          = "192.168.15.222"
-  #   gw          = "192.168.15.1"
-  # }
-  # m3 = {
-  #   target_node = "pve"
-  #   vcpu        = 2
-  #   memory      = 4096
-  #   disk_size   = 30
-  #   name        = "k8sm3"
-  #   notes       = "Kubernetes Control Plane 3"
-  #   ip          = "192.168.15.223"
-  #   gw          = "192.168.15.1"
-  # }
+  m2 = {
+    target_node = "pve"
+    vcpu        = 2
+    memory      = 4096
+    disk_size   = 30
+    name        = "k8sm2"
+    notes       = "Kubernetes Control Plane 2"
+    ip          = "192.168.15.223"
+    gw          = "192.168.15.1"
+  }
+  m3 = {
+    target_node = "pve"
+    vcpu        = 2
+    memory      = 4096
+    disk_size   = 30
+    name        = "k8sm3"
+    notes       = "Kubernetes Control Plane 3"
+    ip          = "192.168.15.225"
+    gw          = "192.168.15.1"
+  }
 }
 
 # --- Worker Nodes (min 1) ---
+# Sobem somente apos TODOS os masters estarem 100% prontos
 k8s_workers = {
   w1 = {
     target_node = "pve"
     vcpu        = 4
-    memory      = 4096
+    memory      = 8192
     disk_size   = 30
     name        = "k8sw1"
     notes       = "Kubernetes Worker 1"
-    ip          = "192.168.15.231"
+    ip          = "192.168.15.222"
     gw          = "192.168.15.1"
   }
   w2 = {
     target_node = "pve"
     vcpu        = 4
-    memory      = 4096
+    memory      = 8192
     disk_size   = 30
     name        = "k8sw2"
     notes       = "Kubernetes Worker 2"
-    ip          = "192.168.15.232"
+    ip          = "192.168.15.224"
     gw          = "192.168.15.1"
   }
 }
@@ -80,6 +83,7 @@ k8s_workers = {
 # --- Network ---
 vip_address = "192.168.15.240"
 pod_cidr    = "10.244.0.0/16"
+# --- (service_cidr tem valor padrao 10.96.0.0/12) ---
 
 # --- MetalLB ---
 metallb_ip_pool = "192.168.15.250-192.168.15.254"

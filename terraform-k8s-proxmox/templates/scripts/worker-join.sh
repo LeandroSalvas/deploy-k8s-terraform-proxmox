@@ -21,8 +21,4 @@ $JOIN_CMD --cri-socket unix:///var/run/crio/crio.sock
 # Wait for kubelet to register
 sleep 10
 
-# Label node with worker role
-echo "==> Labeling node with worker role..."
-kubectl label node $(hostname -s) node-role.kubernetes.io/worker= --kubeconfig /etc/kubernetes/kubelet.conf || echo "WARN: Could not label worker node"
-
 echo "==> [Worker Join] Successfully joined as worker node"
