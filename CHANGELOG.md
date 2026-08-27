@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning 2.0.0](https://semver.org/).
 
+## [1.0.6] - 2026-08-27
+
+### Changed
+
+- Removed legacy cloud-init templates (`templates/cloud-init/*.yaml.tpl`) that were no longer referenced by the active Terraform config and contained the incorrect labeling pattern (`node-labels` via kubelet, rejected by the NodeRestriction admission controller) plus outdated CRI-O repository URLs.
+- Deduplicated the MetalLB configuration: removed the root `metallb/` folder (two split manifests), keeping `terraform-k8s-proxmox/manifests/metallb-config.yaml` as the single reference (identical to what `master-init.sh` applies).
+- `scripts/validate-cluster.sh`: removed the obsolete step that re-applied the MetalLB config; only the test app deployment remains in the next steps.
+- Unified the duplicated `[1.0.4]` section in the CHANGELOG.
+- Updated the directory trees in `README.md` and `README.pt-br.md` to reflect the new layout.
+
+### Removed
+
+- Un-tracked `terraform-k8s-proxmox/terraform.tfvars` and `terraform-k8s-proxmox/terraform.tfstate.backup` from git (`git rm --cached`); they are now correctly ignored, aligned with `.gitignore`.
+
 ## [1.0.5] - 2026-08-27
 
 ### Fixed
@@ -110,6 +124,7 @@ Versioning follows [Semantic Versioning 2.0.0](https://semver.org/).
 - kubeadm cluster bootstrap scripts
 - Basic README and `.gitignore`
 
+[1.0.6]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v1.0.2...v1.0.3
