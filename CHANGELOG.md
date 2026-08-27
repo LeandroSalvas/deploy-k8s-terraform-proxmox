@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning 2.0.0](https://semver.org/).
 
+## [1.0.3] - 2026-08-26
+
+### Fixed
+
+- Control plane nodes now boot sequentially: additional masters wait for the first master to complete `kubeadm init` before joining
+- Split `k8s_master` resource into `k8s_master_first` and `k8s_master_additional` with `depends_on` dependency
+- Added SCP step for additional masters to fetch control-plane join command from first master
+- Added join command validation in `master-join.sh` with retry loop and error handling
+
 ## [1.0.2] - 2026-08-26
 
 ### Added
@@ -76,6 +85,7 @@ Versioning follows [Semantic Versioning 2.0.0](https://semver.org/).
 - kubeadm cluster bootstrap scripts
 - Basic README and `.gitignore`
 
+[1.0.3]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/LeandroSalvas/deploy-k8s-terraform-proxmox/compare/v0.3.0...v1.0.0

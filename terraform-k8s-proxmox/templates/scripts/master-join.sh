@@ -96,14 +96,33 @@ KVEOF
 echo "==> [VIP/HA] kube-vip manifest created with version $${KVVERSION}"
 
 # =============================================================================
-# Step 2: Join cluster as control plane
+# Step 2: Wait for and validate join command from first master
+# =============================================================================
+echo "==> Waiting for control-plane join command from first master..."
+for i in $(seq 1 30); do
+  if [ -f /tmp/control-plane-join-command.txt ] && [ -s /tmp/control-plane-join-command.txt ]; then
+    echo "==> Join command found"
+    break
+  fi
+  echo "==> Waiting for join command (attempt $i/30)..."
+  sleep 10
+done
+
+if [ ! -f /tmp/control-plane-join-command.txt ] || [ ! -s /tmp/control-plane-join-command.txt ]; then
+  echo "ERROR: control-plane-join-command.txt not found or empty after 5 minutes"
+  echo "The first master may not have finished kubeadm init yet"
+  exit 1
+fi
+
+# =============================================================================
+# Step 3: Join cluster as control plane
 # =============================================================================
 echo "==> Joining cluster as control plane..."
 JOIN_CMD=$(cat /tmp/control-plane-join-command.txt | tr -d '\n')
 $JOIN_CMD --cri-socket unix:///var/run/crio/crio.sock
 
 # =============================================================================
-# Step 3: Configure kubectl
+# Step 4: Configure kubectl
 # =============================================================================
 echo "==> Configuring kubectl..."
 mkdir -p /home/ubuntu/.kube
